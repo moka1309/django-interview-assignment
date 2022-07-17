@@ -63,3 +63,7 @@ class CurrentUser(BaseModel):
 
 class UserInDB(CurrentUser):
     hashed_password: str
+
+
+class BookStatus(BaseModel):
+    status: str

@@ -37,6 +37,6 @@ def all_members(db: Session = Depends(get_db), current_user: schemas.User = Depe
     return member.all_members(db, current_user)
 
 
-@router.get('/{user_id}', status_code=200, response_model=schemas.ShowUser)
+@router.get('/{user_id}', status_code=status.HTTP_200_OK, response_model=schemas.ShowUser)
 def show(user_id, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
     return member.show(user_id, db, current_user)

@@ -37,6 +37,20 @@ def all_books(db: Session = Depends(get_db), current_user: schemas.User = Depend
     return book.all_books(db)
 
 
-@router.get('/{book_id}', status_code=200, response_model=schemas.ShowBook)
+@router.get('/{book_id}', status_code=status.HTTP_200_OK, response_model=schemas.ShowBook)
 def show(book_id, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
     return book.show(book_id, db)
+
+
+@router.patch('/borrow/{book_id}', status_code=status.HTTP_202_ACCEPTED)
+def update_status(
+        book_id, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)
+):
+    return book.borrow(book_id, db, current_user)
+
+
+@router.patch('/return/{book_id}', status_code=status.HTTP_202_ACCEPTED)
+def update_status(
+        book_id, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)
+):
+    return book.return_update(book_id, db, current_user)

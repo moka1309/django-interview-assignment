@@ -18,13 +18,18 @@ def create(request: schemas.Book, db: Session, current_user: schemas.User):
     return new_book
 
 
+def check_book(book_id, db):
+    book = db.query(models.Book).filter(models.Book.id == book_id)
+    if not book.first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Book {book_id} not found!")
+
+    return book
+
+
 def update(book_id, request: schemas.Book, db: Session, current_user: schemas.User):
     authentication.check_permission(current_user)
 
-    book = db.query(models.Book).filter(models.Book.id == book_id)
-    if not book.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Book {id} is not found")
+    book = check_book(book_id, db)
     book.update(request.dict(), synchronize_session=False)
     db.commit()
 
@@ -34,10 +39,7 @@ def update(book_id, request: schemas.Book, db: Session, current_user: schemas.Us
 def destroy(book_id, db: Session, current_user: schemas.User):
     authentication.check_permission(current_user)
 
-    book = db.query(models.Book).filter(models.Book.id == book_id)
-    if not book.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Book {book_id} is not found")
+    book = check_book(book_id, db)
     book.delete(synchronize_session=False)
     db.commit()
     
@@ -50,7 +52,35 @@ def all_books(db: Session):
 
 
 def show(book_id, db: Session):
-    book = db.query(models.Book).filter(models.Book.id == book_id).first()
-    if not book:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Book {book_id} not found!")
-    return book
+    book = check_book(book_id, db)
+    return book.first()
+
+
+def borrow(book_id, db: Session, current_user: schemas.User):
+    authentication.check_is_member(current_user)
+
+    book = check_book(book_id, db)
+
+    if book.first().status == "Borrowed":
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                            detail=f"Selected book is already borrowed!")
+
+    db.query(models.Book).filter(models.Book.id == book_id).update({"status": "Borrowed"})
+    db.commit()
+
+    return "Book borrowed successfully!"
+
+
+def return_update(book_id, db: Session, current_user: schemas.User):
+    authentication.check_is_member(current_user)
+
+    book = check_book(book_id, db)
+
+    if book.first().status == "Available":
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                            detail=f"Selected book is already returned!")
+
+    db.query(models.Book).filter(models.Book.id == book_id).update({"status": "Available"})
+    db.commit()
+
+    return "Book returned successfully!"
