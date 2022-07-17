@@ -10,13 +10,11 @@ def create(request: schemas.MemberUser, db: Session, current_user: schemas.User)
 
     authentication.check_name_email_exist(request, db)
 
-    print(f"incoming request {request}")
     new_user = models.User(
         name=request.name,
         email=request.email,
         password=Hash.bcrypt(request.password)
     )
-    print(new_user.password)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -65,3 +63,16 @@ def show(user_id, db: Session, current_user: schemas.User):
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found!")
     return user
+
+
+def delete_account(db: Session, current_user: schemas.User):
+    authentication.check_is_member(current_user)
+    user = db.query(models.User).filter(models.User.email == current_user.email)
+    if not user.first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User {current_user.name} is not found")
+
+    user.delete(synchronize_session=False)
+    db.commit()
+
+    return True

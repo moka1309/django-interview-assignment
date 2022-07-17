@@ -40,3 +40,8 @@ def all_members(db: Session = Depends(get_db), current_user: schemas.User = Depe
 @router.get('/{user_id}', status_code=status.HTTP_200_OK, response_model=schemas.ShowUser)
 def show(user_id, db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
     return member.show(user_id, db, current_user)
+
+
+@router.delete('/delete/account', status_code=status.HTTP_204_NO_CONTENT)
+def delete_account(db: Session = Depends(get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
+    return member.delete_account(db, current_user)
