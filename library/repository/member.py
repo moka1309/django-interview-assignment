@@ -10,11 +10,13 @@ def create(request: schemas.MemberUser, db: Session, current_user: schemas.User)
 
     authentication.check_name_email_exist(request, db)
 
+    print(f"incoming request {request}")
     new_user = models.User(
         name=request.name,
         email=request.email,
         password=Hash.bcrypt(request.password)
     )
+    print(new_user.password)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
